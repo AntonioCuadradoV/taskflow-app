@@ -1,11 +1,6 @@
-import { StatusBar } from 'expo-status-bar';
-import ProfileScreen from './src/screens/ProfileScreen';
+import React from 'react';
+import AddTaskScreen from './src/screens/AddTaskScreen';
 
 export default function App() {
-  return (
-    <>
-      <StatusBar style="dark" />
-      <ProfileScreen />
-    </>
-  );
+  return <AddTaskScreen />;
 }
