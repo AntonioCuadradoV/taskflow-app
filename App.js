@@ -1,11 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
-import ProfileScreen from './src/screens/ProfileScreen';
+import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
   return (
     <>
       <StatusBar style="dark" />
-      <ProfileScreen />
+      <AppNavigator />
     </>
   );
 }
