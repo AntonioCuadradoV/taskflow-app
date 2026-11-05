@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   View,
@@ -6,10 +7,10 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+
 import { useSelector, useDispatch } from 'react-redux';
 
 import { setFilter } from '../redux/taskSlice';
-import ProfileCard from '../components/ProfileCard';
 import colors from '../constants/colors';
 
 export default function TaskListScreen({ navigation }) {
@@ -17,6 +18,9 @@ export default function TaskListScreen({ navigation }) {
 
   const tasks = useSelector((state) => state.tasks.items);
   const filter = useSelector((state) => state.tasks.filter);
+  const user = useSelector((state) => state.auth.user);
+
+  const userName = user?.displayName || user?.email || 'Usuario';
 
   const filteredTasks = tasks.filter((task) => {
     if (filter === 'completed') return task.completed;
@@ -38,21 +42,40 @@ export default function TaskListScreen({ navigation }) {
           {item.completed ? 'Completada' : 'Pendiente'}
         </Text>
       </View>
+
       <Text style={styles.arrow}>›</Text>
     </TouchableOpacity>
   );
 
   const renderHeader = () => (
     <View>
-      <Text style={styles.greeting}>¡Hola!</Text>
+      <Text style={styles.greeting}>
+        ¡Hola, {userName.split(' ')[0]}!
+      </Text>
+
       <Text style={styles.title}>Mis tareas</Text>
 
-      <ProfileCard
-        name="Antonio"
-        role="Administrador"
-        image="https://i.pravatar.cc/150?img=12"
-        status="Activo"
-      />
+      <View style={styles.accountCard}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>
+            {userName.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+
+        <View style={styles.accountInfo}>
+          <Text style={styles.accountName}>
+            {userName}
+          </Text>
+
+          <View style={styles.statusContainer}>
+            <View style={styles.statusIndicator} />
+
+            <Text style={styles.statusText}>
+              Sesión activa
+            </Text>
+          </View>
+        </View>
+      </View>
 
       <View style={styles.filterContainer}>
         {[
@@ -81,7 +104,9 @@ export default function TaskListScreen({ navigation }) {
       </View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Listado de tareas</Text>
+        <Text style={styles.sectionTitle}>
+          Listado de tareas
+        </Text>
 
         <TouchableOpacity
           style={styles.addButton}
@@ -129,6 +154,52 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
     marginBottom: 20,
+  },
+  accountCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 2,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#4F46E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  accountInfo: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  accountName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#16A34A',
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    color: '#16A34A',
   },
   filterContainer: {
     flexDirection: 'row',

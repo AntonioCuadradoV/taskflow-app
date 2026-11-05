@@ -1,3 +1,4 @@
+
 import { createSlice, nanoid } from '@reduxjs/toolkit';
 
 const initialState = {
@@ -46,6 +47,16 @@ const taskSlice = createSlice({
     setFilter(state, action) {
       state.filter = action.payload;
     },
+
+    // Recibir y actualizar las tareas desde Firestore.
+    setTasks(state, action) {
+      state.items = action.payload;
+    },
+
+    // Limpiar las tareas al cerrar sesión.
+    clearTasks(state) {
+      state.items = [];
+    },
   },
 });
 
@@ -54,6 +65,8 @@ export const {
   toggleTaskStatus,
   deleteTask,
   setFilter,
+  setTasks,
+  clearTasks,
 } = taskSlice.actions;
 
 export default taskSlice.reducer;

@@ -1,24 +1,28 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+
+import { useSelector } from 'react-redux';
 
 import {
-  toggleTaskStatus,
-  deleteTask,
-} from '../redux/taskSlice';
+  updateTaskStatus,
+  removeTask,
+} from '../services/taskService';
 
 import colors from '../constants/colors';
 
 export default function TaskDetailScreen({ route, navigation }) {
   const { taskId } = route.params;
-  const dispatch = useDispatch();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const task = useSelector((state) =>
     state.tasks.items.find((item) => item.id === taskId)
@@ -34,8 +38,21 @@ export default function TaskDetailScreen({ route, navigation }) {
     );
   }
 
-  const handleToggleStatus = () => {
-    dispatch(toggleTaskStatus(task.id));
+  const handleToggleStatus = async () => {
+    try {
+      setIsUpdating(true);
+
+      await updateTaskStatus(task.id, !task.completed);
+    } catch (error) {
+      console.error('Error al actualizar la tarea:', error);
+
+      Alert.alert(
+        'Error',
+        'No se pudo actualizar el estado de la tarea.'
+      );
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleDeleteTask = () => {
@@ -50,9 +67,23 @@ export default function TaskDetailScreen({ route, navigation }) {
         {
           text: 'Eliminar',
           style: 'destructive',
-          onPress: () => {
-            dispatch(deleteTask(task.id));
-            navigation.navigate('TaskList');
+          onPress: async () => {
+            try {
+              setIsDeleting(true);
+
+              await removeTask(task.id);
+
+              navigation.navigate('TaskList');
+            } catch (error) {
+              console.error('Error al eliminar la tarea:', error);
+
+              Alert.alert(
+                'Error',
+                'No se pudo eliminar la tarea. Intentá nuevamente.'
+              );
+            } finally {
+              setIsDeleting(false);
+            }
           },
         },
       ]
@@ -80,23 +111,39 @@ export default function TaskDetailScreen({ route, navigation }) {
       </Text>
 
       <TouchableOpacity
-        style={styles.button}
+        style={[
+          styles.button,
+          isUpdating && styles.disabledButton,
+        ]}
         onPress={handleToggleStatus}
+        disabled={isUpdating || isDeleting}
       >
-        <Text style={styles.buttonText}>
-          {task.completed
-            ? 'Marcar como pendiente'
-            : 'Marcar como completada'}
-        </Text>
+        {isUpdating ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.buttonText}>
+            {task.completed
+              ? 'Marcar como pendiente'
+              : 'Marcar como completada'}
+          </Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.deleteButton}
+        style={[
+          styles.deleteButton,
+          isDeleting && styles.disabledButton,
+        ]}
         onPress={handleDeleteTask}
+        disabled={isDeleting || isUpdating}
       >
-        <Text style={styles.deleteButtonText}>
-          Eliminar tarea
-        </Text>
+        {isDeleting ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.deleteButtonText}>
+            Eliminar tarea
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -153,6 +200,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   notFound: {
     fontSize: 18,

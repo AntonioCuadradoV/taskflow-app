@@ -7,20 +7,23 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useDispatch } from 'react-redux';
 
-import { addTask } from '../redux/taskSlice';
+import { useSelector } from 'react-redux';
+
+import { createTask } from '../services/taskService';
 import colors from '../constants/colors';
 
 export default function TaskFormScreen({ navigation }) {
-  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Trabajo');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveTask = () => {
+  const handleSaveTask = async () => {
     if (title.trim().length < 5) {
       Alert.alert(
         'Título inválido',
@@ -37,18 +40,39 @@ export default function TaskFormScreen({ navigation }) {
       return;
     }
 
-    dispatch(
-      addTask({
+    if (!user?.uid) {
+      Alert.alert(
+        'Error',
+        'No se encontró una sesión de usuario activa.'
+      );
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      await createTask(user.uid, {
         title: title.trim(),
         description: description.trim(),
         category,
-        createdAt: new Date().toISOString(),
-      })
-    );
+      });
 
-    Alert.alert('Éxito', 'La tarea se agregó correctamente.');
+      Alert.alert(
+        'Éxito',
+        'La tarea se guardó correctamente.'
+      );
 
-    navigation.navigate('TaskList');
+      navigation.navigate('TaskList');
+    } catch (error) {
+      console.error('Error al guardar la tarea:', error);
+
+      Alert.alert(
+        'Error',
+        'No se pudo guardar la tarea. Intentá nuevamente.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -56,6 +80,7 @@ export default function TaskFormScreen({ navigation }) {
       <Text style={styles.title}>Nueva tarea</Text>
 
       <Text style={styles.label}>Título</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Ingresá el título"
@@ -64,6 +89,7 @@ export default function TaskFormScreen({ navigation }) {
       />
 
       <Text style={styles.label}>Descripción</Text>
+
       <TextInput
         style={[styles.input, styles.textArea]}
         placeholder="Ingresá una descripción"
@@ -97,10 +123,20 @@ export default function TaskFormScreen({ navigation }) {
       </View>
 
       <TouchableOpacity
-        style={styles.saveButton}
+        style={[
+          styles.saveButton,
+          isSaving && styles.disabledButton,
+        ]}
         onPress={handleSaveTask}
+        disabled={isSaving}
       >
-        <Text style={styles.saveButtonText}>Guardar tarea</Text>
+        {isSaving ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.saveButtonText}>
+            Guardar tarea
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -166,6 +202,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 32,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   saveButtonText: {
     color: '#FFFFFF',

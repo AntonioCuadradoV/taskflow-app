@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,6 +10,8 @@ import TaskListScreen from '../screens/TaskListScreen';
 import TaskDetailScreen from '../screens/TaskDetailScreen';
 import TaskFormScreen from '../screens/TaskFormScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -37,42 +40,68 @@ function TaskStack() {
   );
 }
 
+function PublicStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ title: 'Crear cuenta' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function PrivateTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: '#4F46E5',
+        tabBarInactiveTintColor: '#888888',
+        tabBarIcon: ({ color, size }) => {
+          const iconName =
+            route.name === 'Home'
+              ? 'home-outline'
+              : 'person-outline';
+
+          return (
+            <Ionicons
+              name={iconName}
+              size={size}
+              color={color}
+            />
+          );
+        },
+      })}
+    >
+      <Tab.Screen
+        name="Home"
+        component={TaskStack}
+        options={{ title: 'Inicio' }}
+      />
+
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Perfil' }}
+      />
+    </Tab.Navigator>
+  );
+}
+
 export default function AppNavigator() {
+  const user = useSelector((state) => state.auth.user);
+
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarActiveTintColor: '#4F46E5',
-          tabBarInactiveTintColor: '#888888',
-          tabBarIcon: ({ color, size }) => {
-            const iconName =
-              route.name === 'Home'
-                ? 'home-outline'
-                : 'person-outline';
-
-            return (
-              <Ionicons
-                name={iconName}
-                size={size}
-                color={color}
-              />
-            );
-          },
-        })}
-      >
-        <Tab.Screen
-          name="Home"
-          component={TaskStack}
-          options={{ title: 'Inicio' }}
-        />
-
-        <Tab.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{ title: 'Perfil' }}
-        />
-      </Tab.Navigator>
+      {user ? <PrivateTabs /> : <PublicStack />}
     </NavigationContainer>
   );
 }
