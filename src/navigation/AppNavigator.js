@@ -9,7 +9,6 @@ import TaskListScreen from '../screens/TaskListScreen';
 import TaskDetailScreen from '../screens/TaskDetailScreen';
 import TaskFormScreen from '../screens/TaskFormScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import { TasksProvider } from '../context/TasksContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -40,42 +39,40 @@ function TaskStack() {
 
 export default function AppNavigator() {
   return (
-    <TasksProvider>
-      <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            headerShown: false,
-            tabBarActiveTintColor: '#4F46E5',
-            tabBarInactiveTintColor: '#888888',
-            tabBarIcon: ({ color, size }) => {
-              const iconName =
-                route.name === 'Home'
-                  ? 'home-outline'
-                  : 'person-outline';
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarActiveTintColor: '#4F46E5',
+          tabBarInactiveTintColor: '#888888',
+          tabBarIcon: ({ color, size }) => {
+            const iconName =
+              route.name === 'Home'
+                ? 'home-outline'
+                : 'person-outline';
 
-              return (
-                <Ionicons
-                  name={iconName}
-                  size={size}
-                  color={color}
-                />
-              );
-            },
-          })}
-        >
-          <Tab.Screen
-            name="Home"
-            component={TaskStack}
-            options={{ title: 'Inicio' }}
-          />
+            return (
+              <Ionicons
+                name={iconName}
+                size={size}
+                color={color}
+              />
+            );
+          },
+        })}
+      >
+        <Tab.Screen
+          name="Home"
+          component={TaskStack}
+          options={{ title: 'Inicio' }}
+        />
 
-          <Tab.Screen
-            name="Profile"
-            component={ProfileScreen}
-            options={{ title: 'Perfil' }}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </TasksProvider>
+        <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ title: 'Perfil' }}
+        />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }

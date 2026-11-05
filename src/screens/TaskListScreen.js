@@ -1,19 +1,28 @@
-
-import React, { useContext } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
 
+import { setFilter } from '../redux/taskSlice';
 import ProfileCard from '../components/ProfileCard';
 import colors from '../constants/colors';
-import { TasksContext } from '../context/TasksContext';
 
 export default function TaskListScreen({ navigation }) {
-  const { tasks } = useContext(TasksContext);
+  const dispatch = useDispatch();
+
+  const tasks = useSelector((state) => state.tasks.items);
+  const filter = useSelector((state) => state.tasks.filter);
+
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === 'completed') return task.completed;
+    if (filter === 'pending') return !task.completed;
+    return true;
+  });
 
   const renderTask = ({ item }) => (
     <TouchableOpacity
@@ -22,56 +31,79 @@ export default function TaskListScreen({ navigation }) {
         navigation.navigate('TaskDetail', { taskId: item.id })
       }
     >
-      <Text style={styles.taskTitle}>{item.title}</Text>
-
-      <Text style={styles.taskDescription} numberOfLines={2}>
-        {item.description}
-      </Text>
-
-      <Text style={styles.category}>{item.category}</Text>
+      <View style={styles.taskInfo}>
+        <Text style={styles.taskTitle}>{item.title}</Text>
+        <Text style={styles.taskCategory}>{item.category}</Text>
+        <Text style={styles.taskStatus}>
+          {item.completed ? 'Completada' : 'Pendiente'}
+        </Text>
+      </View>
+      <Text style={styles.arrow}>›</Text>
     </TouchableOpacity>
+  );
+
+  const renderHeader = () => (
+    <View>
+      <Text style={styles.greeting}>¡Hola!</Text>
+      <Text style={styles.title}>Mis tareas</Text>
+
+      <ProfileCard
+        name="Antonio"
+        role="Administrador"
+        image="https://i.pravatar.cc/150?img=12"
+        status="Activo"
+      />
+
+      <View style={styles.filterContainer}>
+        {[
+          { label: 'Todas', value: 'all' },
+          { label: 'Pendientes', value: 'pending' },
+          { label: 'Completadas', value: 'completed' },
+        ].map((option) => (
+          <TouchableOpacity
+            key={option.value}
+            style={[
+              styles.filterButton,
+              filter === option.value && styles.activeFilter,
+            ]}
+            onPress={() => dispatch(setFilter(option.value))}
+          >
+            <Text
+              style={[
+                styles.filterText,
+                filter === option.value && styles.activeFilterText,
+              ]}
+            >
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Listado de tareas</Text>
+
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('TaskForm')}
+        >
+          <Text style={styles.addButtonText}>+ Nueva</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 
   return (
     <FlatList
       style={styles.container}
-      data={tasks}
+      contentContainerStyle={styles.content}
+      data={filteredTasks}
       keyExtractor={(item) => item.id}
       renderItem={renderTask}
-      contentContainerStyle={styles.content}
-      ListHeaderComponent={
-        <View>
-          <Text style={styles.greeting}>¡Hola!</Text>
-
-          <Text style={styles.title}>
-            Bienvenido a TaskFlow
-          </Text>
-
-          <ProfileCard
-            name="Antonio"
-            role="Administrador"
-            image="https://i.pravatar.cc/150?img=12"
-          />
-
-          <View style={styles.sectionHeader}>
-            <Text style={styles.tasksTitle}>
-              Mis tareas ({tasks.length})
-            </Text>
-
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => navigation.navigate('TaskForm')}
-            >
-              <Text style={styles.addButtonText}>
-                + Nueva
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      }
+      ListHeaderComponent={renderHeader}
       ListEmptyComponent={
-        <Text style={styles.empty}>
-          ¡No tienes tareas pendientes! Empieza por crear una arriba.
+        <Text style={styles.emptyText}>
+          No hay tareas para mostrar.
         </Text>
       }
     />
@@ -85,29 +117,51 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    paddingTop: 30,
-    flexGrow: 1,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
   greeting: {
     fontSize: 16,
     color: colors.textSecondary,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
-    marginTop: 5,
     marginBottom: 20,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  activeFilter: {
+    backgroundColor: '#4F46E5',
+  },
+  filterText: {
+    fontSize: 12,
+    color: '#333333',
+    fontWeight: '600',
+  },
+  activeFilterText: {
+    color: '#FFFFFF',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 30,
-    marginBottom: 15,
+    marginBottom: 16,
   },
-  tasksTitle: {
-    fontSize: 20,
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.text,
   },
@@ -115,37 +169,47 @@ const styles = StyleSheet.create({
     backgroundColor: '#4F46E5',
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   addButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  empty: {
-    backgroundColor: colors.surface,
-    padding: 18,
-    borderRadius: 12,
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
   taskCard: {
-    backgroundColor: colors.surface,
-    padding: 18,
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
     marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 2,
+  },
+  taskInfo: {
+    flex: 1,
   },
   taskTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: 'bold',
     color: colors.text,
   },
-  taskDescription: {
+  taskCategory: {
+    fontSize: 13,
     color: colors.textSecondary,
-    marginTop: 7,
+    marginTop: 4,
   },
-  category: {
+  taskStatus: {
+    fontSize: 12,
     color: '#4F46E5',
-    marginTop: 10,
-    fontWeight: '600',
+    marginTop: 6,
+  },
+  arrow: {
+    fontSize: 28,
+    color: '#888888',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: colors.textSecondary,
+    marginTop: 20,
   },
 });

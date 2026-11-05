@@ -1,5 +1,5 @@
 
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,58 +7,58 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ScrollView,
 } from 'react-native';
+import { useDispatch } from 'react-redux';
 
+import { addTask } from '../redux/taskSlice';
 import colors from '../constants/colors';
-import { TasksContext } from '../context/TasksContext';
 
 export default function TaskFormScreen({ navigation }) {
-  const { addTask } = useContext(TasksContext);
+  const dispatch = useDispatch();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Trabajo');
 
-  const handleSave = () => {
+  const handleSaveTask = () => {
     if (title.trim().length < 5) {
-      Alert.alert('Error', 'El título debe tener al menos 5 caracteres.');
+      Alert.alert(
+        'Título inválido',
+        'El título debe tener al menos 5 caracteres.'
+      );
       return;
     }
 
     if (description.trim().length < 10) {
-      Alert.alert('Error', 'La descripción debe tener al menos 10 caracteres.');
+      Alert.alert(
+        'Descripción inválida',
+        'La descripción debe tener al menos 10 caracteres.'
+      );
       return;
     }
 
-    const newTask = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      description: description.trim(),
-      category,
-      createdAt: new Date().toISOString(),
-      completed: false,
-    };
+    dispatch(
+      addTask({
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        createdAt: new Date().toISOString(),
+      })
+    );
 
-    addTask(newTask);
-
-    Alert.alert('Éxito', 'Tarea agregada correctamente.');
+    Alert.alert('Éxito', 'La tarea se agregó correctamente.');
 
     navigation.navigate('TaskList');
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.title}>Crear nueva tarea</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Nueva tarea</Text>
 
       <Text style={styles.label}>Título</Text>
       <TextInput
         style={styles.input}
-        placeholder="Ej. Estudiar React Native"
+        placeholder="Ingresá el título"
         value={title}
         onChangeText={setTitle}
       />
@@ -66,11 +66,10 @@ export default function TaskFormScreen({ navigation }) {
       <Text style={styles.label}>Descripción</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
-        placeholder="Describe los detalles de la tarea..."
+        placeholder="Ingresá una descripción"
         value={description}
         onChangeText={setDescription}
         multiline
-        numberOfLines={4}
       />
 
       <Text style={styles.label}>Categoría</Text>
@@ -99,11 +98,11 @@ export default function TaskFormScreen({ navigation }) {
 
       <TouchableOpacity
         style={styles.saveButton}
-        onPress={handleSave}
+        onPress={handleSaveTask}
       >
         <Text style={styles.saveButtonText}>Guardar tarea</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -111,55 +110,52 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  content: {
     padding: 24,
-    paddingBottom: 40,
   },
   title: {
-    fontSize: 25,
+    fontSize: 26,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 25,
+    marginBottom: 24,
   },
   label: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: colors.text,
     marginBottom: 8,
-    marginTop: 15,
+    marginTop: 16,
   },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#DDDDDD',
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 14,
     fontSize: 15,
-    color: colors.text,
   },
   textArea: {
-    height: 120,
+    height: 110,
     textAlignVertical: 'top',
   },
   categories: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
+    marginTop: 4,
   },
   categoryButton: {
-    borderWidth: 1,
-    borderColor: '#4F46E5',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#E5E7EB',
+    alignItems: 'center',
   },
   selectedCategory: {
     backgroundColor: '#4F46E5',
   },
   categoryText: {
-    color: '#4F46E5',
+    color: '#333333',
     fontWeight: '600',
+    fontSize: 13,
   },
   selectedCategoryText: {
     color: '#FFFFFF',
@@ -167,9 +163,9 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: '#4F46E5',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 32,
   },
   saveButtonText: {
     color: '#FFFFFF',
